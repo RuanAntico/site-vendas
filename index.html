@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Vendas - MVC</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Página de Login -->
+    <div id="loginPage" style="display: none;">
+        <div class="center-container">
+            <div class="card">
+                <h2><i class="fas fa-sign-in-alt"></i> Sistema de Vendas</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Tipo de Usuário</label>
+                        <select id="userType" class="form-control">
+                            <option value="admin">Administrador</option>
+                            <option value="client">Cliente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="email" id="email" class="form-control" placeholder="seu@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Senha</label>
+                        <input type="password" id="password" class="form-control" placeholder="Digite sua senha" required>
+                    </div>
+                    <button type="submit" class="btn">
+                        <i class="fas fa-sign-in-alt"></i> Entrar
+                    </button>
+                </form>
+                <div class="demo-info">
+                    <p><strong>Admin:</strong> admin@email.com / senha123</p>
+                    <p><strong>Cliente:</strong> cliente@email.com / senha123</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Página do Admin -->
+    <div id="adminPage" style="display: none;">
+        <div class="header">
+            <h1><i class="fas fa-user-shield"></i> Painel Administrativo</h1>
+            <button class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+        <div class="center-container">
+            <div class="card">
+                <h2><i class="fas fa-user-plus"></i> Cadastrar Cliente</h2>
+                <form id="adminForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome do Cliente</label>
+                            <input type="text" id="clientName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Telefone</label>
+                            <input type="tel" id="clientPhone" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="email" id="clientEmail" class="form-control" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Senha</label>
+                            <input type="password" id="clientPassword" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>CPF</label>
+                            <input type="text" id="clientCpf" class="form-control">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-user-plus"></i> Cadastrar Cliente
+                    </button>
+                </form>
+                <div>
+                    <h3>Clientes Cadastrados</h3>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>Telefone</th>
+                                <th>CPF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientsList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Página do Cliente -->
+    <div id="clientPage" style="display: none;">
+        <div class="header">
+            <h1><i class="fas fa-user"></i> Área do Cliente</h1>
+            <button class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+        <div class="center-container">
+            <div class="card">
+                <h2><i class="fas fa-shopping-cart"></i> Novo Pedido</h2>
+                <form id="clientForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome do Produto</label>
+                            <input type="text" id="productName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Categoria</label>
+                            <select id="productCategory" class="form-control" required>
+                                <option value="">Selecione...</option>
+                                <option value="eletronicos">Eletrônicos</option>
+                                <option value="moveis">Móveis</option>
+                                <option value="roupas">Roupas</option>
+                                <option value="alimentos">Alimentos</option>
+                                <option value="outros">Outros</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Quantidade</label>
+                            <input type="number" id="productQuantity" class="form-control" required min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Valor Unitário (R$)</label>
+                            <input type="number" id="productPrice" class="form-control" required step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Observações</label>
+                        <textarea id="orderNotes" class="form-control" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-paper-plane"></i> Enviar Pedido
+                    </button>
+                </form>
+                <div class="back-link">
+                    <a onclick="window.logout()">
+                        <i class="fas fa-arrow-left"></i> Voltar para o login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Página de Seleção de Serviço -->
+    <div id="servicoPage" style="display: none;">
+        <div class="header">
+            <h1><i class="fas fa-briefcase"></i> Seleção de Serviço</h1>
+            <button class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+        <div class="center-container">
+            <div class="card">
+                <h2><i class="fas fa-list"></i> Escolha um Serviço</h2>
+                <div class="servicos-grid">
+                    <button class="btn-servico" data-servico="mailing">
+                        <i class="fas fa-envelope"></i> Mailing
+                    </button>
+                    <button class="btn-servico" data-servico="enriquecimento">
+                        <i class="fas fa-database"></i> Enriquecimento
+                    </button>
+                    <button class="btn-servico" data-servico="tratamento">
+                        <i class="fas fa-broom"></i> Tratamento e Higienização
+                    </button>
+                    <button class="btn-servico" data-servico="whatsapp">
+                        <i class="fab fa-whatsapp"></i> Disparo de Whats App
+                    </button>
+                    <button class="btn-servico" data-servico="outro">
+                        <i class="fas fa-cog"></i> Serviço Customizado
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Página de Seleção de Tipo de Pessoa -->
+    <div id="tipoPessoaPage" style="display: none;">
+        <div class="header">
+            <h1><i class="fas fa-user-check"></i> <span id="servicoSelecionado">Serviço</span></h1>
+            <button class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+        <div class="center-container">
+            <div class="card">
+                <h2><i class="fas fa-clone"></i> Tipo de Pessoa</h2>
+                <p style="text-align: center; color: #666; margin-bottom: 30px;">Selecione o tipo de pessoa para prosseguir</p>
+                <div style="display: flex; gap: 20px; justify-content: center;">
+                    <button class="btn btn-large" data-tipo-pessoa="fisica">
+                        <i class="fas fa-user"></i> Pessoa Física
+                    </button>
+                    <button class="btn btn-large" data-tipo-pessoa="juridica">
+                        <i class="fas fa-building"></i> Pessoa Jurídica
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Página de Pessoa Física -->
+    <div id="pessoaFisicaPage" style="display: none;">
+        <div class="header">
+            <h1><i class="fas fa-user"></i> <span id="servicoAtual">Serviço</span> - Pessoa Física</h1>
+            <button class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+        <div class="center-container">
+            <div class="card" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                <h2><i class="fas fa-form"></i> Dados da Pessoa Física</h2>
+                <form id="pessoaFisicaForm">
+                    <!-- Localização -->
+                    <h3 style="color: #2c3e50; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                        <i class="fas fa-map-marker-alt"></i> Localização
+                    </h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>CEP</label>
+                            <input type="text" id="pf_cep" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Bairro</label>
+                            <input type="text" id="pf_bairro" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cidade</label>
+                            <input type="text" id="pf_cidade" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <input type="text" id="pf_estado" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Região</label>
+                        <input type="text" id="pf_regiao" class="form-control">
+                    </div>
+
+                    <!-- Dados Pessoais -->
+                    <h3 style="color: #2c3e50; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                        <i class="fas fa-user-circle"></i> Dados Pessoais
+                    </h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Faixa Etária</label>
+                            <select id="pf_faixaEtaria" class="form-control">
+                                <option value="">Selecione...</option>
+                                <option value="18-25">18-25</option>
+                                <option value="26-35">26-35</option>
+                                <option value="36-45">36-45</option>
+                                <option value="46-55">46-55</option>
+                                <option value="56+">56+</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Gênero</label>
+                            <select id="pf_genero" class="form-control">
+                                <option value="">Selecione...</option>
+                                <option value="masculino">Masculino</option>
+                                <option value="feminino">Feminino</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Estado Civil</label>
+                            <select id="pf_estadoCivil" class="form-control">
+                                <option value="">Selecione...</option>
+                                <option value="solteiro">Solteiro</option>
+                                <option value="casado">Casado</option>
+                                <option value="divorciado">Divorciado</option>
+                                <option value="viuvo">Viúvo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Grau de Escolaridade</label>
+                            <select id="pf_escolaridade" class="form-control">
+                                <option value="">Selecione...</option>
+                                <option value="fundamental">Fundamental</option>
+                                <option value="medio">Ensino Médio</option>
+                                <option value="superior">Ensino Superior</option>
+                                <option value="posgraduacao">Pós-Graduação</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dados Profissionais -->
+                    <h3 style="color: #2c3e50; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                        <i class="fas fa-briefcase"></i> Dados Profissionais
+                    </h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Profissão</label>
+                            <input type="text" id="pf_profissao" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Órgão</label>
+                            <input type="text" id="pf_orgao" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Servidor</label>
+                            <select id="pf_servidor" class="form-control">
+                                <option value="">Selecione...</option>
+                                <option value="sim">Sim</option>
+                                <option value="nao">Não</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Investidor</label>
+                            <select id="pf_investidor" class="form-control">
+                                <option value="">Selecione...</option>
+                                <option value="sim">Sim</option>
+                                <option value="nao">Não</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Empresário</label>
+                            <select id="pf_empresario" class="form-control">
+                                <option value="">Selecione...</option>
+                                <option value="sim">Sim</option>
+                                <option value="nao">Não</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 15px; margin-top: 15px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="pf_aposentado">
+                            <span>Aposentado</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="pf_pensionista">
+                            <span>Pensionista</span>
+                        </label>
+                    </div>
+
+                    <!-- Dados Financeiros -->
+                    <h3 style="color: #2c3e50; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                        <i class="fas fa-money-bill-wave"></i> Dados Financeiros
+                    </h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Banco</label>
+                            <input type="text" id="pf_banco" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Margem Disponível</label>
+                            <input type="text" id="pf_margemDisponivel" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Poder Aquisitivo</label>
+                            <select id="pf_poderAquisitivo" class="form-control">
+                                <option value="">Selecione...</option>
+                                <option value="baixo">Baixo</option>
+                                <option value="medio">Médio</option>
+                                <option value="alto">Alto</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Classe Social</label>
+                            <select id="pf_classeSocial" class="form-control">
+                                <option value="">Selecione...</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Patrimônio -->
+                    <h3 style="color: #2c3e50; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                        <i class="fas fa-home"></i> Patrimônio
+                    </h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Imóveis</label>
+                            <input type="number" id="pf_imoveis" class="form-control" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Veículos</label>
+                            <input type="number" id="pf_veiculos" class="form-control" min="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Espécie</label>
+                        <input type="text" id="pf_especie" class="form-control">
+                    </div>
+
+                    <!-- Contato -->
+                    <h3 style="color: #2c3e50; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                        <i class="fas fa-phone"></i> Contato
+                    </h3>
+                    <div class="form-group">
+                        <label>WhatsApp</label>
+                        <input type="tel" id="pf_whatsapp" class="form-control">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 30px;">
+                        <button type="submit" class="btn btn-success" style="flex: 1;">
+                            <i class="fas fa-save"></i> Salvar Dados
+                        </button>
+                        <button type="button" id="voltarPF" class="btn" style="flex: 1; background: #95a5a6;">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Página de Pessoa Jurídica -->
+    <div id="pessoaJuridicaPage" style="display: none;">
+        <div class="header">
+            <h1><i class="fas fa-building"></i> <span id="servicoAtualPJ">Serviço</span> - Pessoa Jurídica</h1>
+            <button class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+        <div class="center-container">
+            <div class="card" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                <h2><i class="fas fa-form"></i> Dados da Pessoa Jurídica</h2>
+                <form id="pessoaJuridicaForm">
+                    <!-- Localização -->
+                    <h3 style="color: #2c3e50; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                        <i class="fas fa-map-marker-alt"></i> Localização
+                    </h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>CEP</label>
+                            <input type="text" id="pj_cep" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Bairro</label>
+                            <input type="text" id="pj_bairro" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cidade</label>
+                            <input type="text" id="pj_cidade" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <input type="text" id="pj_estado" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Região</label>
+                        <input type="text" id="pj_regiao" class="form-control">
+                    </div>
+
+                    <!-- Dados Comerciais -->
+                    <h3 style="color: #2c3e50; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                        <i class="fas fa-store"></i> Dados Comerciais
+                    </h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tempo de Mercado</label>
+                            <input type="text" id="pj_tempoMercado" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Matriz ou Filial</label>
+                            <select id="pj_matrizFilial" class="form-control">
+                                <option value="">Selecione...</option>
+                                <option value="matriz">Matriz</option>
+                                <option value="filial">Filial</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Natureza Jurídica</label>
+                            <input type="text" id="pj_naturezaJuridica" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Porte</label>
+                            <select id="pj_porte" class="form-control">
+                                <option value="">Selecione...</option>
+                                <option value="microempresa">Microempresa</option>
+                                <option value="pequena">Pequena</option>
+                                <option value="media">Média</option>
+                                <option value="grande">Grande</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dados Fiscais -->
+                    <h3 style="color: #2c3e50; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                        <i class="fas fa-file-invoice-dollar"></i> Dados Fiscais
+                    </h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Perfil Tributário</label>
+                            <input type="text" id="pj_perfilTributario" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Dívida Ativa</label>
+                            <select id="pj_dividaAtiva" class="form-control">
+                                <option value="">Selecione...</option>
+                                <option value="sim">Sim</option>
+                                <option value="nao">Não</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>CNAE</label>
+                            <input type="text" id="pj_cnae" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Dados Operacionais -->
+                    <h3 style="color: #2c3e50; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                        <i class="fas fa-users"></i> Dados Operacionais
+                    </h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Quantidade de Funcionários</label>
+                            <input type="number" id="pj_quantidadeFuncionarios" class="form-control" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Capital Social (R$)</label>
+                            <input type="number" id="pj_capitalSocial" class="form-control" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Faturamento (R$)</label>
+                        <input type="number" id="pj_faturamento" class="form-control" min="0" step="0.01">
+                    </div>
+
+                    <!-- Contato -->
+                    <h3 style="color: #2c3e50; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                        <i class="fas fa-phone"></i> Contato
+                    </h3>
+                    <div class="form-group">
+                        <label>WhatsApp</label>
+                        <input type="tel" id="pj_whatsapp" class="form-control">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 30px;">
+                        <button type="submit" class="btn btn-success" style="flex: 1;">
+                            <i class="fas fa-save"></i> Salvar Dados
+                        </button>
+                        <button type="button" id="voltarPJ" class="btn" style="flex: 1; background: #95a5a6;">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts de Configuração -->
+    <script src="js/config.js"></script>
+
+    <!-- Scripts do Modelo -->
+    <script src="js/models/Sistema.js"></script>
+
+    <!-- Scripts das Views -->
+    <script src="js/views/BaseView.js"></script>
+    <script src="js/views/LoginView.js"></script>
+    <script src="js/views/ServicoView.js"></script>
+    <script src="js/views/TipoPessoaView.js"></script>
+    <script src="js/views/PessoaFisicaView.js"></script>
+    <script src="js/views/PessoaJuridicaView.js"></script>
+    <script src="js/views/AdminView.js"></script>
+    <script src="js/views/ClientView.js"></script>
+
+    <!-- Scripts dos Controllers -->
+    <script src="js/controllers/LoginController.js"></script>
+    <script src="js/controllers/ServicoController.js"></script>
+    <script src="js/controllers/TipoPessoaController.js"></script>
+    <script src="js/controllers/PessoaFisicaController.js"></script>
+    <script src="js/controllers/PessoaJuridicaController.js"></script>
+    <script src="js/controllers/AdminController.js"></script>
+    <script src="js/controllers/ClientController.js"></script>
+    <script src="js/controllers/AppController.js"></script>
+</body>
+</html>
