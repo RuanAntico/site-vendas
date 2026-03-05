@@ -21,7 +21,6 @@ class LoginView extends BaseView {
      */
     obterDados() {
         return {
-            userType: this.obterValor('userType'),
             email: this.obterValor('email'),
             senha: this.obterValor('password')
         };

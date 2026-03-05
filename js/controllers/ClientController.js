@@ -1,5 +1,5 @@
 /**
- * ClientController - Controla a lógica da área do cliente
+ * ClientController - Controla a logica da area do cliente
  */
 class ClientController {
     constructor(sistema, view) {
@@ -13,20 +13,18 @@ class ClientController {
     }
 
     /**
-     * Processa a adição de um novo pedido
+     * Processa a adicao de um novo pedido
      */
-    handleAdicionarPedido() {
+    async handleAdicionarPedido() {
         const dados = this.view.obterDados();
 
-        // Valida os dados
         const validacao = this.view.validarDados(dados);
         if (!validacao.valido) {
             this.view.mostrarMensagem(validacao.mensagem, 'error');
             return;
         }
 
-        // Adiciona o pedido
-        const resultado = this.sistema.adicionarPedido(
+        const resultado = await this.sistema.adicionarPedido(
             dados.nomeProduto,
             dados.categoria,
             dados.quantidade,
@@ -37,18 +35,17 @@ class ClientController {
         if (resultado.sucesso) {
             this.view.mostrarMensagem(resultado.mensagem, 'success');
             this.view.limpar();
-            
-            // Volta para seleção de serviço após 2 segundos
+
             setTimeout(() => {
                 window.app.servicoController.exibir();
             }, 2000);
         } else {
-            this.view.mostrarMensagem(resultado.mensagem, 'error');
+            this.view.mostrarMensagem(resultado.mensagem || 'Erro ao enviar pedido', 'error');
         }
     }
 
     /**
-     * Exibe a página do cliente
+     * Exibe a pagina do cliente
      */
     exibir() {
         this.view.exibir();

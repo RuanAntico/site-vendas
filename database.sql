@@ -39,6 +39,8 @@ CREATE TABLE pedidos (
     observacoes TEXT,
     data DATETIME,
     status VARCHAR(50),
+    pessoa_tipo ENUM('fisica', 'juridica') NULL,
+    pessoa_ref_id INT NULL,
     FOREIGN KEY (email) REFERENCES usuarios(email)
 );
 

@@ -5,22 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Vendas - MVC</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=20260305-6">
 </head>
 <body>
-    <!-- Página de Login -->
+    <!-- P??gina de Login -->
     <div id="loginPage" style="display: none;">
         <div class="center-container">
             <div class="card">
                 <h2><i class="fas fa-sign-in-alt"></i> Sistema de Vendas</h2>
                 <form id="loginForm">
-                    <div class="form-group">
-                        <label>Tipo de Usuário</label>
-                        <select id="userType" class="form-control">
-                            <option value="admin">Administrador</option>
-                            <option value="client">Cliente</option>
-                        </select>
-                    </div>
                     <div class="form-group">
                         <label>E-mail</label>
                         <input type="email" id="email" class="form-control" placeholder="seu@email.com" required>
@@ -33,15 +26,11 @@
                         <i class="fas fa-sign-in-alt"></i> Entrar
                     </button>
                 </form>
-                <div class="demo-info">
-                    <p><strong>Admin:</strong> admin@email.com / senha123</p>
-                    <p><strong>Cliente:</strong> cliente@email.com / senha123</p>
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- Página do Admin -->
+    <!-- P??gina do Admin -->
     <div id="adminPage" style="display: none;">
         <div class="header">
             <h1><i class="fas fa-user-shield"></i> Painel Administrativo</h1>
@@ -95,14 +84,109 @@
                         <tbody id="clientsList"></tbody>
                     </table>
                 </div>
+
+                <hr style="margin: 30px 0;">
+
+                <div>
+                    <h3>Pedidos dos Clientes</h3>
+                    <div class="form-row" style="margin-top: 10px;">
+                        <div class="form-group" style="max-width: 260px;">
+                            <label for="filterStatusPedido">Filtrar por status</label>
+                            <select id="filterStatusPedido" class="form-control">
+                                <option value="">Todos</option>
+                                <option value="Pendente">Pendente</option>
+                                <option value="Finalizado">Finalizado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Cliente</th>
+                                <th>Produto</th>
+                                <th>Categoria</th>
+                                <th>Qtd</th>
+                                <th>Preco Unit.</th>
+                                <th>Total</th>
+                                <th>Data</th>
+                                <th>Status</th>
+                                <th>Dados Vinculados</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pedidosList">
+                            <tr><td colspan="10" style="text-align:center;">Nenhum pedido encontrado</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="pedidoModal" class="modal-overlay">
+                    <div class="modal-card">
+                        <div class="modal-header">
+                            <h3>Editar Pedido</h3>
+                            <button type="button" id="fecharPedidoModal" class="modal-close">&times;</button>
+                        </div>
+                        <form id="pedidoEditForm">
+                            <input type="hidden" id="editPedidoId">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Cliente</label>
+                                    <input type="text" id="editClienteNome" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Status</label>
+                                    <select id="editStatus" class="form-control">
+                                        <option value="Pendente">Pendente</option>
+                                        <option value="Finalizado">Finalizado</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Produto</label>
+                                    <input type="text" id="editProduto" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Categoria</label>
+                                    <input type="text" id="editCategoria" class="form-control">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Quantidade</label>
+                                    <input type="number" id="editQuantidade" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Preco Unitario</label>
+                                    <input type="number" id="editPrecoUnitario" class="form-control" step="0.01" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total</label>
+                                    <input type="number" id="editValorTotal" class="form-control" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Observacoes</label>
+                                <textarea id="editObservacoes" class="form-control" rows="2"></textarea>
+                            </div>
+                            <hr style="margin: 15px 0;">
+                            <h4 style="margin-bottom: 10px;">Dados Vinculados (PF/PJ)</h4>
+                            <div id="editPessoaCamposContainer" class="dynamic-fields-grid"></div>
+                            <div class="form-row" style="margin-top: 10px;">
+                                <button type="submit" class="btn btn-success">Salvar Alteracoes</button>
+                                <button type="button" id="cancelarPedidoModal" class="btn">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Página do Cliente -->
+    <!-- P??gina do Cliente -->
     <div id="clientPage" style="display: none;">
         <div class="header">
-            <h1><i class="fas fa-user"></i> Área do Cliente</h1>
+            <h1><i class="fas fa-user"></i> ??rea do Cliente</h1>
             <button class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i> Sair
             </button>
@@ -120,8 +204,8 @@
                             <label>Categoria</label>
                             <select id="productCategory" class="form-control" required>
                                 <option value="">Selecione...</option>
-                                <option value="eletronicos">Eletrônicos</option>
-                                <option value="moveis">Móveis</option>
+                                <option value="eletronicos">Eletr??nicos</option>
+                                <option value="moveis">M??veis</option>
                                 <option value="roupas">Roupas</option>
                                 <option value="alimentos">Alimentos</option>
                                 <option value="outros">Outros</option>
@@ -134,12 +218,12 @@
                             <input type="number" id="productQuantity" class="form-control" required min="1">
                         </div>
                         <div class="form-group">
-                            <label>Valor Unitário (R$)</label>
+                            <label>Valor Unit??rio (R$)</label>
                             <input type="number" id="productPrice" class="form-control" required step="0.01">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Observações</label>
+                        <label>Observa????es</label>
                         <textarea id="orderNotes" class="form-control" rows="3"></textarea>
                     </div>
                     <button type="submit" class="btn btn-success">
@@ -155,17 +239,17 @@
         </div>
     </div>
 
-    <!-- Página de Seleção de Serviço -->
+    <!-- P??gina de Sele????o de Servi??o -->
     <div id="servicoPage" style="display: none;">
         <div class="header">
-            <h1><i class="fas fa-briefcase"></i> Seleção de Serviço</h1>
+            <h1><i class="fas fa-briefcase"></i> Sele????o de Servi??o</h1>
             <button class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i> Sair
             </button>
         </div>
         <div class="center-container">
             <div class="card">
-                <h2><i class="fas fa-list"></i> Escolha um Serviço</h2>
+                <h2><i class="fas fa-list"></i> Escolha um Servi??o</h2>
                 <div class="servicos-grid">
                     <button class="btn-servico" data-servico="mailing">
                         <i class="fas fa-envelope"></i> Mailing
@@ -174,23 +258,23 @@
                         <i class="fas fa-database"></i> Enriquecimento
                     </button>
                     <button class="btn-servico" data-servico="tratamento">
-                        <i class="fas fa-broom"></i> Tratamento e Higienização
+                        <i class="fas fa-broom"></i> Tratamento e Higieniza????o
                     </button>
                     <button class="btn-servico" data-servico="whatsapp">
                         <i class="fab fa-whatsapp"></i> Disparo de Whats App
                     </button>
                     <button class="btn-servico" data-servico="outro">
-                        <i class="fas fa-cog"></i> Serviço Customizado
+                        <i class="fas fa-cog"></i> Servi??o Customizado
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Página de Seleção de Tipo de Pessoa -->
+    <!-- P??gina de Sele????o de Tipo de Pessoa -->
     <div id="tipoPessoaPage" style="display: none;">
         <div class="header">
-            <h1><i class="fas fa-user-check"></i> <span id="servicoSelecionado">Serviço</span></h1>
+            <h1><i class="fas fa-user-check"></i> <span id="servicoSelecionado">Servi??o</span></h1>
             <button class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i> Sair
             </button>
@@ -201,31 +285,31 @@
                 <p style="text-align: center; color: #666; margin-bottom: 30px;">Selecione o tipo de pessoa para prosseguir</p>
                 <div style="display: flex; gap: 20px; justify-content: center;">
                     <button class="btn btn-large" data-tipo-pessoa="fisica">
-                        <i class="fas fa-user"></i> Pessoa Física
+                        <i class="fas fa-user"></i> Pessoa F??sica
                     </button>
                     <button class="btn btn-large" data-tipo-pessoa="juridica">
-                        <i class="fas fa-building"></i> Pessoa Jurídica
+                        <i class="fas fa-building"></i> Pessoa Jur??dica
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Página de Pessoa Física -->
+    <!-- P??gina de Pessoa F??sica -->
     <div id="pessoaFisicaPage" style="display: none;">
         <div class="header">
-            <h1><i class="fas fa-user"></i> <span id="servicoAtual">Serviço</span> - Pessoa Física</h1>
+            <h1><i class="fas fa-user"></i> <span id="servicoAtual">Servi??o</span> - Pessoa F??sica</h1>
             <button class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i> Sair
             </button>
         </div>
         <div class="center-container">
             <div class="card" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
-                <h2><i class="fas fa-form"></i> Dados da Pessoa Física</h2>
+                <h2><i class="fas fa-form"></i> Dados da Pessoa F??sica</h2>
                 <form id="pessoaFisicaForm">
-                    <!-- Localização -->
+                    <!-- Localiza????o -->
                     <h3 style="color: #2c3e50; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
-                        <i class="fas fa-map-marker-alt"></i> Localização
+                        <i class="fas fa-map-marker-alt"></i> Localiza????o
                     </h3>
                     <div class="form-row">
                         <div class="form-group">
@@ -248,7 +332,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Região</label>
+                        <label>Regi??o</label>
                         <input type="text" id="pf_regiao" class="form-control">
                     </div>
 
@@ -258,7 +342,7 @@
                     </h3>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Faixa Etária</label>
+                            <label>Faixa Et??ria</label>
                             <select id="pf_faixaEtaria" class="form-control">
                                 <option value="">Selecione...</option>
                                 <option value="18-25">18-25</option>
@@ -269,7 +353,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Gênero</label>
+                            <label>G??nero</label>
                             <select id="pf_genero" class="form-control">
                                 <option value="">Selecione...</option>
                                 <option value="masculino">Masculino</option>
@@ -286,7 +370,7 @@
                                 <option value="solteiro">Solteiro</option>
                                 <option value="casado">Casado</option>
                                 <option value="divorciado">Divorciado</option>
-                                <option value="viuvo">Viúvo</option>
+                                <option value="viuvo">Vi??vo</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -294,9 +378,9 @@
                             <select id="pf_escolaridade" class="form-control">
                                 <option value="">Selecione...</option>
                                 <option value="fundamental">Fundamental</option>
-                                <option value="medio">Ensino Médio</option>
+                                <option value="medio">Ensino M??dio</option>
                                 <option value="superior">Ensino Superior</option>
-                                <option value="posgraduacao">Pós-Graduação</option>
+                                <option value="posgraduacao">P??s-Gradua????o</option>
                             </select>
                         </div>
                     </div>
@@ -307,11 +391,11 @@
                     </h3>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Profissão</label>
+                            <label>Profiss??o</label>
                             <input type="text" id="pf_profissao" class="form-control">
                         </div>
                         <div class="form-group">
-                            <label>Órgão</label>
+                            <label>??rg??o</label>
                             <input type="text" id="pf_orgao" class="form-control">
                         </div>
                     </div>
@@ -321,7 +405,7 @@
                             <select id="pf_servidor" class="form-control">
                                 <option value="">Selecione...</option>
                                 <option value="sim">Sim</option>
-                                <option value="nao">Não</option>
+                                <option value="nao">N??o</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -329,17 +413,17 @@
                             <select id="pf_investidor" class="form-control">
                                 <option value="">Selecione...</option>
                                 <option value="sim">Sim</option>
-                                <option value="nao">Não</option>
+                                <option value="nao">N??o</option>
                             </select>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Empresário</label>
+                            <label>Empres??rio</label>
                             <select id="pf_empresario" class="form-control">
                                 <option value="">Selecione...</option>
                                 <option value="sim">Sim</option>
-                                <option value="nao">Não</option>
+                                <option value="nao">N??o</option>
                             </select>
                         </div>
                     </div>
@@ -364,7 +448,7 @@
                             <input type="text" id="pf_banco" class="form-control">
                         </div>
                         <div class="form-group">
-                            <label>Margem Disponível</label>
+                            <label>Margem Dispon??vel</label>
                             <input type="text" id="pf_margemDisponivel" class="form-control">
                         </div>
                     </div>
@@ -374,7 +458,7 @@
                             <select id="pf_poderAquisitivo" class="form-control">
                                 <option value="">Selecione...</option>
                                 <option value="baixo">Baixo</option>
-                                <option value="medio">Médio</option>
+                                <option value="medio">M??dio</option>
                                 <option value="alto">Alto</option>
                             </select>
                         </div>
@@ -391,22 +475,22 @@
                         </div>
                     </div>
 
-                    <!-- Patrimônio -->
+                    <!-- Patrim??nio -->
                     <h3 style="color: #2c3e50; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
-                        <i class="fas fa-home"></i> Patrimônio
+                        <i class="fas fa-home"></i> Patrim??nio
                     </h3>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Imóveis</label>
+                            <label>Im??veis</label>
                             <input type="number" id="pf_imoveis" class="form-control" min="0">
                         </div>
                         <div class="form-group">
-                            <label>Veículos</label>
+                            <label>Ve??culos</label>
                             <input type="number" id="pf_veiculos" class="form-control" min="0">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Espécie</label>
+                        <label>Esp??cie</label>
                         <input type="text" id="pf_especie" class="form-control">
                     </div>
 
@@ -432,21 +516,21 @@
         </div>
     </div>
 
-    <!-- Página de Pessoa Jurídica -->
+    <!-- P??gina de Pessoa Jur??dica -->
     <div id="pessoaJuridicaPage" style="display: none;">
         <div class="header">
-            <h1><i class="fas fa-building"></i> <span id="servicoAtualPJ">Serviço</span> - Pessoa Jurídica</h1>
+            <h1><i class="fas fa-building"></i> <span id="servicoAtualPJ">Servi??o</span> - Pessoa Jur??dica</h1>
             <button class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i> Sair
             </button>
         </div>
         <div class="center-container">
             <div class="card" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
-                <h2><i class="fas fa-form"></i> Dados da Pessoa Jurídica</h2>
+                <h2><i class="fas fa-form"></i> Dados da Pessoa Jur??dica</h2>
                 <form id="pessoaJuridicaForm">
-                    <!-- Localização -->
+                    <!-- Localiza????o -->
                     <h3 style="color: #2c3e50; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
-                        <i class="fas fa-map-marker-alt"></i> Localização
+                        <i class="fas fa-map-marker-alt"></i> Localiza????o
                     </h3>
                     <div class="form-row">
                         <div class="form-group">
@@ -469,7 +553,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Região</label>
+                        <label>Regi??o</label>
                         <input type="text" id="pj_regiao" class="form-control">
                     </div>
 
@@ -493,7 +577,7 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Natureza Jurídica</label>
+                            <label>Natureza Jur??dica</label>
                             <input type="text" id="pj_naturezaJuridica" class="form-control">
                         </div>
                         <div class="form-group">
@@ -502,7 +586,7 @@
                                 <option value="">Selecione...</option>
                                 <option value="microempresa">Microempresa</option>
                                 <option value="pequena">Pequena</option>
-                                <option value="media">Média</option>
+                                <option value="media">M??dia</option>
                                 <option value="grande">Grande</option>
                             </select>
                         </div>
@@ -514,15 +598,15 @@
                     </h3>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Perfil Tributário</label>
+                            <label>Perfil Tribut??rio</label>
                             <input type="text" id="pj_perfilTributario" class="form-control">
                         </div>
                         <div class="form-group">
-                            <label>Dívida Ativa</label>
+                            <label>D??vida Ativa</label>
                             <select id="pj_dividaAtiva" class="form-control">
                                 <option value="">Selecione...</option>
                                 <option value="sim">Sim</option>
-                                <option value="nao">Não</option>
+                                <option value="nao">N??o</option>
                             </select>
                         </div>
                     </div>
@@ -539,7 +623,7 @@
                     </h3>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Quantidade de Funcionários</label>
+                            <label>Quantidade de Funcion??rios</label>
                             <input type="number" id="pj_quantidadeFuncionarios" class="form-control" min="0">
                         </div>
                         <div class="form-group">
@@ -574,30 +658,36 @@
         </div>
     </div>
 
-    <!-- Scripts de Configuração -->
-    <script src="js/config.js"></script>
+    <!-- Scripts de Configura????o -->
+    <script src="js/config.js?v=20260305-6"></script>
 
     <!-- Scripts do Modelo -->
-    <script src="js/models/Sistema.js"></script>
+    <script src="js/models/Sistema.js?v=20260305-6"></script>
 
     <!-- Scripts das Views -->
-    <script src="js/views/BaseView.js"></script>
-    <script src="js/views/LoginView.js"></script>
-    <script src="js/views/ServicoView.js"></script>
-    <script src="js/views/TipoPessoaView.js"></script>
-    <script src="js/views/PessoaFisicaView.js"></script>
-    <script src="js/views/PessoaJuridicaView.js"></script>
-    <script src="js/views/AdminView.js"></script>
-    <script src="js/views/ClientView.js"></script>
+    <script src="js/views/BaseView.js?v=20260305-6"></script>
+    <script src="js/views/LoginView.js?v=20260305-6"></script>
+    <script src="js/views/ServicoView.js?v=20260305-6"></script>
+    <script src="js/views/TipoPessoaView.js?v=20260305-6"></script>
+    <script src="js/views/PessoaFisicaView.js?v=20260305-6"></script>
+    <script src="js/views/PessoaJuridicaView.js?v=20260305-6"></script>
+    <script src="js/views/AdminView.js?v=20260305-6"></script>
+    <script src="js/views/ClientView.js?v=20260305-6"></script>
 
     <!-- Scripts dos Controllers -->
-    <script src="js/controllers/LoginController.js"></script>
-    <script src="js/controllers/ServicoController.js"></script>
-    <script src="js/controllers/TipoPessoaController.js"></script>
-    <script src="js/controllers/PessoaFisicaController.js"></script>
-    <script src="js/controllers/PessoaJuridicaController.js"></script>
-    <script src="js/controllers/AdminController.js"></script>
-    <script src="js/controllers/ClientController.js"></script>
-    <script src="js/controllers/AppController.js"></script>
+    <script src="js/controllers/LoginController.js?v=20260305-6"></script>
+    <script src="js/controllers/ServicoController.js?v=20260305-6"></script>
+    <script src="js/controllers/TipoPessoaController.js?v=20260305-6"></script>
+    <script src="js/controllers/PessoaFisicaController.js?v=20260305-6"></script>
+    <script src="js/controllers/PessoaJuridicaController.js?v=20260305-6"></script>
+    <script src="js/controllers/AdminController.js?v=20260305-6"></script>
+    <script src="js/controllers/ClientController.js?v=20260305-6"></script>
+    <script src="js/controllers/AppController.js?v=20260305-6"></script>
 </body>
 </html>
+
+
+
+
+
+

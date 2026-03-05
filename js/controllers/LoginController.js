@@ -1,5 +1,5 @@
 /**
- * LoginController - Controla a lógica de login
+ * LoginController - Controla a logica de login
  */
 class LoginController {
     constructor(sistema, view) {
@@ -18,19 +18,18 @@ class LoginController {
     async handleLogin() {
         const dados = this.view.obterDados();
 
-        const resultado = await this.sistema.login(dados.email, dados.senha, dados.userType);
+        const resultado = await this.sistema.login(dados.email, dados.senha);
 
         if (resultado.sucesso) {
-            const tipoMsg = dados.userType === 'admin' ? 'Administrador' : 'Cliente';
+            const tipoUsuario = resultado.usuario.tipo;
+            const tipoMsg = tipoUsuario === 'admin' ? 'Administrador' : 'Cliente';
             this.view.mostrarMensagem(`Bem-vindo, ${tipoMsg}!`, 'success');
-            
-            // Dispara evento de login bem-sucedido
+
             window.dispatchEvent(new CustomEvent('loginSucesso', {
-                detail: { usuario: resultado.usuario, tipo: dados.userType }
+                detail: { usuario: resultado.usuario, tipo: tipoUsuario }
             }));
 
-            // Se é client, mostra seleção de serviço após login
-            if (dados.userType === 'client') {
+            if (tipoUsuario === 'client') {
                 setTimeout(() => {
                     window.app.exibirSelecaoServico();
                 }, 1500);

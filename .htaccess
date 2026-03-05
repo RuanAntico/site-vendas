@@ -1,32 +1,39 @@
 # ==========================================
-# Configurações do Apache para InfinityFree
+# Configuracoes do Apache para InfinityFree
 # ==========================================
 
-# Ativar mod_rewrite
+Options -Indexes
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
 
-    # Proteger arquivos que não devem ser acessados
-    RewriteRule ^api/config\.php$ - [L,NC]
-    RewriteRule ^\.git - [L,NC]
-    RewriteRule ^database\.sql$ - [L,NC]
-    
-    # Permitir arquivos estáticos (CSS, JS, imagens, etc)
+    # Bloqueia acesso direto a arquivos sensiveis
+    RewriteRule (^|/)\.git - [F,L,NC]
+    RewriteRule (^|/)database\.sql$ - [F,L,NC]
+    RewriteRule (^|/)api/config\.php$ - [F,L,NC]
+
+    # Permitir arquivos estaticos
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # Redirecionar tudo para index.html para SPA (Single Page Application)
+    # SPA
     RewriteRule ^(?!api/).*$ index.html [QSA,L]
 </IfModule>
 
-# Permitir acesso à API
-<Files "*.php">
-    Allow from all
-</Files>
+# Permitir execucao de PHP na API/publico conforme regras acima
+<FilesMatch "\.php$">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Allow from all
+    </IfModule>
+</FilesMatch>
 
-# Configurações de cache
+# Cache
 <IfModule mod_expires.c>
     ExpiresActive On
     ExpiresByType text/html "access plus 1 days"
@@ -44,12 +51,12 @@
     ExpiresByType font/woff2 "access plus 1 year"
 </IfModule>
 
-# Compressão GZIP
+# Compressao
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json
 </IfModule>
 
-# Segurança de headers
+# Headers de seguranca
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"

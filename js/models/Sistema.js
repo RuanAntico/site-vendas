@@ -1,286 +1,301 @@
 /**
  * Model - Sistema de Vendas
- * Gerencia toda a lógica de dados com integração a API
+ * Opera prioritariamente via API/MySQL
  */
 class Sistema {
     constructor() {
-        // URL base da API (adaptar para o domínio do InfinityFree)
         this.apiUrl = CONFIG.API_BASE_URL;
         this.usarBancoDados = CONFIG.USAR_BANCO_DADOS;
-        
-        this.usuarios = [
-            { email: 'admin@email.com', senha: 'senha123', tipo: 'admin', nome: 'Administrador' },
-            { email: 'cliente@email.com', senha: 'senha123', tipo: 'client', nome: 'Cliente Demo', telefone: '(11) 99999-8888', cpf: '123.456.789-00' }
-        ];
-        this.clientes = [];
-        this.pedidos = [];
-        this.pessoasFisicas = [];
-        this.pessoasJuridicas = [];
+
         this.usuarioLogado = null;
         this.servicoAtual = null;
         this.nomeServicoAtual = null;
         this.tipoPessoaAtual = null;
-        this.loadFromStorage();
     }
 
     /**
-     * Realiza o login de um usuário
+     * Realiza o login de um usuario
      */
-    async login(email, senha, tipo) {
-        if (this.usarBancoDados) {
-            try {
-                log('Tentando login via API:', { email, tipo });
-                
-                const response = await fetch(`${this.apiUrl}/login.php`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, senha, tipo })
-                });
+    async login(email, senha) {
+        if (!this.usarBancoDados) {
+            return { sucesso: false, mensagem: 'Modo banco de dados esta desativado na configuracao.' };
+        }
 
-                const resultado = await response.json();
-                
-                if (resultado.sucesso) {
-                    this.usuarioLogado = resultado.usuario;
-                    localStorage.setItem('userType', tipo);
-                    localStorage.setItem('userEmail', email);
-                    log('Login bem-sucedido:', resultado.usuario);
-                    return resultado;
-                }
-                logErro('Login falhou');
-                return resultado;
-            } catch (erro) {
-                logErro('Erro ao fazer login:', erro);
-                return { sucesso: false, mensagem: 'Erro ao conectar ao servidor' };
+        try {
+            const response = await fetch(`${this.apiUrl}/login.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, senha })
+            });
+
+            const resultado = await response.json();
+
+            if (resultado.sucesso) {
+                this.usuarioLogado = resultado.usuario;
+                localStorage.setItem('userType', resultado.usuario.tipo);
+                localStorage.setItem('userEmail', resultado.usuario.email);
+                localStorage.setItem('userData', JSON.stringify(resultado.usuario));
             }
-        } else {
-            // Usa dados locais (para desenvolvimento)
-            const usuario = this.usuarios.find(u => u.email === email && u.senha === senha && u.tipo === tipo);
-            if (usuario) {
-                this.usuarioLogado = { ...usuario };
-                localStorage.setItem('userType', tipo);
-                localStorage.setItem('userEmail', email);
-                log('Login local bem-sucedido:', usuario);
-                return { sucesso: true, usuario };
-            }
-            logErro('Credenciais inválidas');
-            return { sucesso: false, mensagem: 'Credenciais inválidas!' };
+
+            return resultado;
+        } catch (erro) {
+            logErro('Erro ao fazer login via API', erro);
+            return { sucesso: false, mensagem: 'Erro ao conectar ao servidor' };
         }
     }
 
     /**
-     * Faz logout do usuário
+     * Faz logout do usuario
      */
     logout() {
         this.usuarioLogado = null;
         localStorage.removeItem('userType');
         localStorage.removeItem('userEmail');
+        localStorage.removeItem('userData');
         log('Logout realizado');
     }
 
     /**
-     * Restaura o login se houver usuário na storage
+     * Restaura sessao de login
      */
     restaurarLogin() {
-        const userType = localStorage.getItem('userType');
-        const userEmail = localStorage.getItem('userEmail');
-        
-        if (userType && userEmail) {
-            const usuario = this.usuarios.find(u => u.email === userEmail && u.tipo === userType);
-            if (usuario) {
-                this.usuarioLogado = { ...usuario };
-                log('Login restaurado:', usuario);
+        const userData = localStorage.getItem('userData');
+        if (!userData) {
+            return null;
+        }
+
+        try {
+            const usuario = JSON.parse(userData);
+            if (usuario && usuario.email && usuario.tipo) {
+                this.usuarioLogado = usuario;
                 return usuario;
             }
+            return null;
+        } catch (erro) {
+            logErro('Erro ao restaurar login', erro);
+            return null;
         }
-        return null;
     }
 
     /**
      * Adiciona um novo cliente
      */
-    adicionarCliente(nome, email, senha, telefone, cpf) {
-        // Verifica se email já existe
-        if (this.usuarios.some(u => u.email === email)) {
-            return { sucesso: false, mensagem: 'Este e-mail já está cadastrado!' };
+    async adicionarCliente(nome, email, senha, telefone, cpf) {
+        if (!this.usarBancoDados) {
+            return { sucesso: false, mensagem: 'Modo banco de dados esta desativado na configuracao.' };
         }
 
-        const novoCliente = {
-            email,
-            senha,
-            tipo: 'client',
-            nome,
-            telefone,
-            cpf
-        };
+        try {
+            const response = await fetch(`${this.apiUrl}/usuarios.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nome,
+                    email,
+                    senha,
+                    telefone,
+                    cpf,
+                    tipo: 'client'
+                })
+            });
 
-        this.usuarios.push(novoCliente);
-        this.clientes.push({
-            email,
-            nome,
-            telefone,
-            cpf,
-            dataCadastro: new Date().toLocaleDateString('pt-BR')
-        });
+            const resultado = await response.json();
+            if (!resultado.sucesso) {
+                return resultado;
+            }
 
-        this.saveToStorage();
-        log('Cliente adicionado:', nom);
-        return { sucesso: true, mensagem: `Cliente ${nome} cadastrado com sucesso!` };
+            // Confirma no banco antes de sinalizar sucesso na UI.
+            const clientes = await this.obterClientes();
+            const clienteCriado = clientes.find((c) => c.email === email);
+            if (!clienteCriado) {
+                return {
+                    sucesso: false,
+                    mensagem: 'Cadastro nao confirmado no banco. Atualize a pagina e tente novamente.'
+                };
+            }
+
+            return resultado;
+        } catch (erro) {
+            logErro('Erro ao criar cliente via API', erro);
+            return { sucesso: false, mensagem: 'Erro ao conectar ao servidor' };
+        }
     }
 
     /**
      * Retorna lista de clientes
      */
-    obterClientes() {
-        return this.usuarios.filter(u => u.tipo === 'client');
+    async obterClientes() {
+        if (!this.usarBancoDados) {
+            return [];
+        }
+
+        try {
+            const response = await fetch(`${this.apiUrl}/usuarios.php?tipo=client`);
+            const resultado = await response.json();
+            return resultado.sucesso ? (resultado.dados || []) : [];
+        } catch (erro) {
+            logErro('Erro ao listar clientes via API', erro);
+            return [];
+        }
     }
 
     /**
      * Adiciona um novo pedido
      */
-    adicionarPedido(nomeProduto, categoria, quantidade, preco, observacoes) {
+    async adicionarPedido(nomeProduto, categoria, quantidade, preco, observacoes, meta = {}) {
         if (!this.usuarioLogado) {
-            return { sucesso: false, mensagem: 'Usuário não autenticado!' };
+            return { sucesso: false, mensagem: 'Usuario nao autenticado.' };
         }
 
-        const valorTotal = (parseFloat(quantidade) * parseFloat(preco)).toFixed(2);
+        if (!this.usarBancoDados) {
+            return { sucesso: false, mensagem: 'Modo banco de dados esta desativado na configuracao.' };
+        }
 
-        const novoPedido = {
+        const quantidadeNum = parseInt(quantidade, 10) || 0;
+        const precoNum = parseFloat(preco) || 0;
+        const valorTotal = (quantidadeNum * precoNum).toFixed(2);
+
+        const payload = {
             email: this.usuarioLogado.email,
-            clienteNome: this.usuarioLogado.nome,
+            cliente_nome: this.usuarioLogado.nome || this.usuarioLogado.email,
             produto: nomeProduto,
             categoria,
-            quantidade,
-            precoUnitario: preco,
-            valorTotal,
+            quantidade: quantidadeNum,
+            preco_unitario: precoNum,
+            valor_total: parseFloat(valorTotal),
             observacoes,
-            data: new Date().toLocaleString('pt-BR'),
-            status: 'Pendente'
+            status: 'Pendente',
+            pessoa_tipo: meta.pessoa_tipo || null,
+            pessoa_ref_id: meta.pessoa_ref_id || null
         };
 
-        this.pedidos.push(novoPedido);
-        this.saveToStorage();
-        log('Pedido adicionado:', novoPedido);
-        return { sucesso: true, mensagem: 'Pedido enviado com sucesso! Voltando à seleção de serviços...' };
+        try {
+            const response = await fetch(`${this.apiUrl}/pedidos.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const resultado = await response.json();
+            if (resultado.sucesso) {
+                return { sucesso: true, mensagem: 'Pedido enviado com sucesso!' };
+            }
+            return resultado;
+        } catch (erro) {
+            logErro('Erro ao enviar pedido via API', erro);
+            return { sucesso: false, mensagem: 'Erro ao conectar ao servidor' };
+        }
     }
 
     /**
-     * Obtém pedidos do usuário logado
+     * Lista pedidos (todos ou por email)
      */
-    obterPedidosUsuario() {
-        if (!this.usuarioLogado) return [];
-        return this.pedidos.filter(p => p.email === this.usuarioLogado.email);
+    async obterPedidos(emailCliente = '') {
+        if (!this.usarBancoDados) {
+            return [];
+        }
+
+        try {
+            let url = `${this.apiUrl}/pedidos.php`;
+            if (emailCliente) {
+                url += `?email=${encodeURIComponent(emailCliente)}`;
+            }
+
+            const response = await fetch(url);
+            const resultado = await response.json();
+            return resultado.sucesso ? (resultado.dados || []) : [];
+        } catch (erro) {
+            logErro('Erro ao listar pedidos via API', erro);
+            return [];
+        }
     }
 
     /**
-     * Adiciona dados de pessoa física (com suporte a API)
+     * Atualiza um pedido e seus dados vinculados de PF/PJ
+     */
+    async atualizarPedidoCompleto(payload) {
+        if (!this.usarBancoDados) {
+            return { sucesso: false, mensagem: 'Modo banco de dados esta desativado na configuracao.' };
+        }
+
+        try {
+            const response = await fetch(`${this.apiUrl}/pedidos.php`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            return await response.json();
+        } catch (erro) {
+            logErro('Erro ao atualizar pedido via API', erro);
+            return { sucesso: false, mensagem: 'Erro ao conectar ao servidor' };
+        }
+    }
+
+    /**
+     * Lista pedidos do usuario logado
+     */
+    async obterPedidosUsuario() {
+        if (!this.usuarioLogado) {
+            return [];
+        }
+        return this.obterPedidos(this.usuarioLogado.email);
+    }
+
+    /**
+     * Adiciona dados de pessoa fisica
      */
     async adicionarPessoaFisica(dados) {
-        if (this.usarBancoDados) {
-            try {
-                log('Salvando pessoa física via API:', dados);
-                
-                const response = await fetch(`${this.apiUrl}/pessoas-fisicas.php`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(dados)
-                });
+        if (!this.usarBancoDados) {
+            return { sucesso: false, mensagem: 'Modo banco de dados esta desativado na configuracao.' };
+        }
 
-                const resultado = await response.json();
-                if (resultado.sucesso) {
-                    log('Pessoa física salva com sucesso. ID:', resultado.id);
-                }
-                return resultado;
-            } catch (erro) {
-                logErro('Erro ao salvar pessoa física:', erro);
-                return { sucesso: false, mensagem: 'Erro ao conectar ao servidor' };
-            }
-        } else {
-            // Usa dados locais
-            this.pessoasFisicas.push(dados);
-            this.saveToStorage();
-            log('Pessoa física salva localmente');
-            return { sucesso: true, mensagem: 'Dados de pessoa física registrados!' };
+        try {
+            const response = await fetch(`${this.apiUrl}/pessoas-fisicas.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            });
+
+            return await response.json();
+        } catch (erro) {
+            logErro('Erro ao salvar pessoa fisica', erro);
+            return { sucesso: false, mensagem: 'Erro ao conectar ao servidor' };
         }
     }
 
     /**
-     * Adiciona dados de pessoa jurídica (com suporte a API)
+     * Adiciona dados de pessoa juridica
      */
     async adicionarPessoaJuridica(dados) {
-        if (this.usarBancoDados) {
-            try {
-                log('Salvando pessoa jurídica via API:', dados);
-                
-                const response = await fetch(`${this.apiUrl}/pessoas-juridicas.php`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(dados)
-                });
+        if (!this.usarBancoDados) {
+            return { sucesso: false, mensagem: 'Modo banco de dados esta desativado na configuracao.' };
+        }
 
-                const resultado = await response.json();
-                if (resultado.sucesso) {
-                    log('Pessoa jurídica salva com sucesso. ID:', resultado.id);
-                }
-                return resultado;
-            } catch (erro) {
-                logErro('Erro ao salvar pessoa jurídica:', erro);
-                return { sucesso: false, mensagem: 'Erro ao conectar ao servidor' };
-            }
-        } else {
-            // Usa dados locais
-            this.pessoasJuridicas.push(dados);
-            this.saveToStorage();
-            log('Pessoa jurídica salva localmente');
-            return { sucesso: true, mensagem: 'Dados de pessoa jurídica registrados!' };
+        try {
+            const response = await fetch(`${this.apiUrl}/pessoas-juridicas.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            });
+
+            return await response.json();
+        } catch (erro) {
+            logErro('Erro ao salvar pessoa juridica', erro);
+            return { sucesso: false, mensagem: 'Erro ao conectar ao servidor' };
         }
     }
 
     /**
-     * Obtém todas as pessoas físicas
+     * Nao utilizado em modo banco
      */
     obterPessoasFisicas() {
-        return this.pessoasFisicas;
+        return [];
     }
 
     /**
-     * Obtém todas as pessoas jurídicas
+     * Nao utilizado em modo banco
      */
     obterPessoasJuridicas() {
-        return this.pessoasJuridicas;
-    }
-
-    /**
-     * Salva dados no localStorage
-     */
-    saveToStorage() {
-        const dados = {
-            usuarios: this.usuarios,
-            clientes: this.clientes,
-            pedidos: this.pedidos,
-            pessoasFisicas: this.pessoasFisicas,
-            pessoasJuridicas: this.pessoasJuridicas
-        };
-        localStorage.setItem('sistema_vendas', JSON.stringify(dados));
-    }
-
-    /**
-     * Carrega dados do localStorage
-     */
-    loadFromStorage() {
-        const saved = localStorage.getItem('sistema_vendas');
-        if (saved) {
-            try {
-                const dados = JSON.parse(saved);
-                this.usuarios = dados.usuarios || this.usuarios;
-                this.clientes = dados.clientes || [];
-                this.pedidos = dados.pedidos || [];
-                this.pessoasFisicas = dados.pessoasFisicas || [];
-                this.pessoasJuridicas = dados.pessoasJuridicas || [];
-                log('Dados carregados do localStorage');
-            } catch (erro) {
-                logErro('Erro ao carregar dados do localStorage:', erro);
-            }
-        }
+        return [];
     }
 }
-

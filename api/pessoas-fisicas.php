@@ -1,14 +1,34 @@
 <?php
 /**
- * API para Salvar Dados de Pessoa Física
+ * API para dados de pessoa fisica
+ * GET /api/pessoas-fisicas.php?action=listar
  * POST /api/pessoas-fisicas.php
  */
 
 require_once 'config.php';
 
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    if (isset($_GET['action']) && $_GET['action'] === 'listar') {
+        try {
+            $sql = "SELECT * FROM pessoas_fisicas ORDER BY id DESC";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+            echo json_encode(['sucesso' => true, 'dados' => $stmt->fetchAll()]);
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao listar dados PF', 'erro' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    http_response_code(400);
+    echo json_encode(['sucesso' => false, 'mensagem' => 'Acao GET invalida']);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(['sucesso' => false, 'mensagem' => 'Método não permitido']);
+    echo json_encode(['sucesso' => false, 'mensagem' => 'Metodo nao permitido']);
     exit;
 }
 
@@ -16,7 +36,7 @@ $dados = json_decode(file_get_contents('php://input'), true);
 
 if (!isset($dados['cep']) || !isset($dados['cidade']) || !isset($dados['estado'])) {
     http_response_code(400);
-    echo json_encode(['sucesso' => false, 'mensagem' => 'Dados obrigatórios faltando']);
+    echo json_encode(['sucesso' => false, 'mensagem' => 'Dados obrigatorios faltando']);
     exit;
 }
 
@@ -38,7 +58,7 @@ try {
     )";
 
     $stmt = $conn->prepare($sql);
-    
+
     $stmt->execute([
         $dados['servicoId'] ?? null,
         $dados['nomeServico'] ?? null,
@@ -56,8 +76,8 @@ try {
         $dados['servidor'] ?? null,
         $dados['investidor'] ?? null,
         $dados['empresario'] ?? null,
-        isset($dados['aposentado']) && $dados['aposentado'] ? 1 : 0,
-        isset($dados['pensionista']) && $dados['pensionista'] ? 1 : 0,
+        !empty($dados['aposentado']) ? 1 : 0,
+        !empty($dados['pensionista']) ? 1 : 0,
         $dados['banco'] ?? null,
         $dados['margemDisponivel'] ?? null,
         $dados['poderAquisitivo'] ?? null,
@@ -73,10 +93,9 @@ try {
 
     echo json_encode([
         'sucesso' => true,
-        'mensagem' => 'Dados de pessoa física salvos com sucesso!',
-        'id' => $conn->lastInsertId()
+        'mensagem' => 'Dados de pessoa fisica salvos com sucesso!',
+        'id' => (int) $conn->lastInsertId()
     ]);
-
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode([

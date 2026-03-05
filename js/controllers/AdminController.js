@@ -1,5 +1,5 @@
 /**
- * AdminController - Controla a lógica do painel administrativo
+ * AdminController - Controla a logica do painel administrativo
  */
 class AdminController {
     constructor(sistema, view) {
@@ -10,23 +10,26 @@ class AdminController {
 
     init() {
         this.view.defineCallbackSubmit(() => this.handleAdicionarCliente());
+        this.view.defineCallbackEditarPedido((pedidoId) => this.handleEditarPedido(pedidoId));
+        this.view.defineCallbackFiltroStatus((status) => this.handleFiltrarStatus(status));
+        this.view.defineCallbackSalvarPedido((payload) => this.handleSalvarEdicaoPedido(payload));
+        this.pedidosCache = [];
+        this.statusFiltroAtual = '';
     }
 
     /**
-     * Processa a adição de um novo cliente
+     * Processa a adicao de um novo cliente
      */
-    handleAdicionarCliente() {
+    async handleAdicionarCliente() {
         const dados = this.view.obterDados();
 
-        // Valida os dados
         const validacao = this.view.validarDados(dados);
         if (!validacao.valido) {
             this.view.mostrarMensagem(validacao.mensagem, 'error');
             return;
         }
 
-        // Adiciona o cliente
-        const resultado = this.sistema.adicionarCliente(
+        const resultado = await this.sistema.adicionarCliente(
             dados.nome,
             dados.email,
             dados.senha,
@@ -35,19 +38,20 @@ class AdminController {
         );
 
         if (resultado.sucesso) {
-            this.view.mostrarMensagem(resultado.mensagem, 'success');
+            this.view.mostrarMensagem('Cliente cadastrado com sucesso!', 'success');
             this.view.limpar();
-            this.atualizarListaClientes();
+            await this.atualizarListaClientes();
+            await this.atualizarPedidos();
         } else {
-            this.view.mostrarMensagem(resultado.mensagem, 'error');
+            this.view.mostrarMensagem(resultado.mensagem || 'Erro ao cadastrar cliente', 'error');
         }
     }
 
     /**
      * Atualiza a lista de clientes na tela
      */
-    atualizarListaClientes() {
-        const clientes = this.sistema.obterClientes();
+    async atualizarListaClientes() {
+        const clientes = await this.sistema.obterClientes();
         this.view.atualizarTabelaClientes(clientes);
     }
 
@@ -57,13 +61,12 @@ class AdminController {
     async atualizarDadosColetados() {
         if (this.sistema.usarBancoDados) {
             try {
-                // Tenta carregar do banco via API
                 const resultadoPF = await fetch(`${this.sistema.apiUrl}/pessoas-fisicas.php?action=listar`);
                 const resultadoPJ = await fetch(`${this.sistema.apiUrl}/pessoas-juridicas.php?action=listar`);
-                
+
                 const pf = await resultadoPF.json();
                 const pj = await resultadoPJ.json();
-                
+
                 this.view.atualizarTabelaDadosColetados({
                     pessoasFisicas: pf.dados || [],
                     pessoasJuridicas: pj.dados || []
@@ -72,23 +75,75 @@ class AdminController {
                 console.error('Erro ao carregar dados:', erro);
                 this.view.mostrarMensagem('Erro ao carregar dados dos clientes', 'error');
             }
-        } else {
-            // Usa dados locais
-            const pf = this.sistema.obterPessoasFisicas();
-            const pj = this.sistema.obterPessoasJuridicas();
-            this.view.atualizarTabelaDadosColetados({
-                pessoasFisicas: pf,
-                pessoasJuridicas: pj
-            });
         }
     }
 
     /**
-     * Exibe a página e atualiza as listas
+     * Atualiza pedidos para o admin
+     */
+    async atualizarPedidos() {
+        const pedidos = await this.sistema.obterPedidos();
+        this.pedidosCache = pedidos;
+        this.renderizarPedidosFiltrados();
+    }
+
+    /**
+     * Edita pedido ao clicar em uma linha da tabela
+     */
+    async handleEditarPedido(pedidoId) {
+        const pedido = this.pedidosCache.find((p) => String(p.id) === String(pedidoId));
+        if (!pedido) {
+            this.view.mostrarMensagem('Pedido nao encontrado para edicao.', 'error');
+            return;
+        }
+        this.view.abrirModalPedido(pedido);
+    }
+
+    /**
+     * Salva a edicao do pedido
+     */
+    async handleSalvarEdicaoPedido(payload) {
+        const resultado = await this.sistema.atualizarPedidoCompleto(payload);
+        if (!resultado.sucesso) {
+            this.view.mostrarMensagem(resultado.mensagem || 'Erro ao atualizar pedido', 'error');
+            return;
+        }
+        this.view.fecharModalPedido();
+        this.view.mostrarMensagem('Pedido atualizado com sucesso!', 'success');
+        await this.atualizarPedidos();
+    }
+
+    /**
+     * Aplica filtro de status no grid
+     */
+    handleFiltrarStatus(status) {
+        this.statusFiltroAtual = status || '';
+        this.renderizarPedidosFiltrados();
+    }
+
+    /**
+     * Renderiza pedidos conforme filtro atual
+     */
+    renderizarPedidosFiltrados() {
+        const statusFiltro = (this.statusFiltroAtual || '').trim().toLowerCase();
+        if (!statusFiltro) {
+            this.view.atualizarTabelaPedidos(this.pedidosCache);
+            return;
+        }
+        const filtrados = this.pedidosCache.filter((pedido) => {
+            const status = String(pedido.status || '').trim().toLowerCase();
+            return status === statusFiltro;
+        });
+        this.view.atualizarTabelaPedidos(filtrados);
+    }
+
+    /**
+     * Exibe a pagina e atualiza as listas
      */
     exibir() {
         this.view.exibir();
         this.atualizarListaClientes();
         this.atualizarDadosColetados();
+        this.atualizarPedidos();
     }
 }
