@@ -1,2 +1,3 @@
 api/secrets.local.php
 api/test-connection.php
+api/secrets.example.php
